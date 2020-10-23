@@ -4,35 +4,24 @@ import numpy as np
 from nilearn.image import resample_img
 import torch
 import os
-import pandas as pd
 from torchvision import transforms
-from nitorch.transforms import  ToTensor, SagittalTranslate, SagittalFlip, \
-                                AxialTranslate, normalization_factors, Normalize, \
-                                IntensityRescale
 
-compose = transforms.Compose([
-  transforms.ToTensor(),
-])
+#compose = transforms.Compose([
+#  transforms.ToTensor(),
+#])
 
 
 class ADNIDataloader(Dataset):
 
     def __init__(self, df, root_dir, transform):
-
         self.df = df
         self.root_dir = root_dir
         self.transform = transform
-        #       print(self.transform)
 
     def __len__(self):
         return len(self.df)
 
     def __getitem__(self, index):
-#        print("labels names for cross check")
-#        print(index)
-#        print(self.df.iloc[index, 1])
-#        print("=========================================self.df=====================================")
-#        print(self.df)
         img_path = os.path.join(self.root_dir, self.df.iloc[index, 0]) #1
         image = nib.load(img_path)
         img_shape = image.shape
@@ -53,18 +42,11 @@ class ADNIDataloader(Dataset):
         if self.transform:
             resampled_data_arr = self.transform(resampled_data_arr)
 
-
         resampled_data_arr = np.reshape(resampled_data_arr, (1, 256, 256, 166)) # ignored bz 1 is added in transform
 
-        y_label = 0.0
-        if self.df.iloc[index, 1] == 'AD': #bz using cross entropy #1
-            y_label = 1.0
+        y_label = 0.0 if self.df.iloc[index, 1] == 'AD' else 1.0 #bz using cross entropy #1
 
-
-#        y_label =  [1.0, 0.0] if (self.annotations.iloc[index, 1] == 'AD') else [0.0, 1.0]
-
-
-        #y_label = torch.tensor(int(y_label))
+#        y_label =  [1.0, 0.0] if (self.annotations.iloc[index, 1] == 'AD') else [0.0, 1.0] # for other cross entropy
 
         y_label = torch.tensor(y_label, dtype=torch.long)
 
